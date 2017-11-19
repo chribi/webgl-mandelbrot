@@ -2,46 +2,10 @@
 <html>
 <head>
     <title>Mandelbrot Set</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script type="text/javascript" src="setup.js"></script>
-    <script id="vertex-src" type="text/shadersource">
-attribute vec2 aScreenPosition;
-attribute vec2 aCoordinate;
-varying vec2 c;
-
-void main(void) {
-    gl_Position = vec4(aScreenPosition, 0, 1);
-    c = aCoordinate;
-}
-    </script>
-    <script id="fragment-src" type="text/shadersource">
-precision mediump float;
-
-varying vec2 c;
-
-void main(void) {
-    vec2 z = vec2(0.0, 0.0);
-    vec2 zn = vec2(0.0, 0.0);
-
-    int breakAt = -1;
-
-    for (int iteration = 0; iteration < 200; iteration++) {
-        zn.x = z.x * z.x - z.y * z.y + c.x;
-        zn.y = 2.0 * z.x * z.y + c.y;
-        if (length(zn) > 2.0) {
-            breakAt = iteration;
-            break;
-        }
-        z = zn;
-    }
-    if (breakAt == -1) {
-        gl_FragColor = vec4(0, 0, 0, 1.0);
-    } else {
-        gl_FragColor = vec4(1, 1, 1, 1);
-    }
-}
-    </script>
 </head>
-<body onload="main()">
+<body>
     <canvas id="glcanvas" width="800" height="600"></canvas>
 </body>
 </html>
