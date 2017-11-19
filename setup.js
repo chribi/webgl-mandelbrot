@@ -25,9 +25,10 @@ void main(void) {
     vec2 z = vec2(0.0, 0.0);
     vec2 zn = vec2(0.0, 0.0);
 
+    const int maxIter = 200;
     int breakAt = -1;
 
-    for (int iteration = 0; iteration < 200; iteration++) {
+    for (int iteration = 0; iteration < maxIter; iteration++) {
         zn.x = z.x * z.x - z.y * z.y + c.x;
         zn.y = 2.0 * z.x * z.y + c.y;
         if (length(zn) > 2.0) {
@@ -39,7 +40,8 @@ void main(void) {
     if (breakAt == -1) {
         gl_FragColor = vec4(0, 0, 0, 1.0);
     } else {
-        gl_FragColor = vec4(1, 1, 1, 1);
+        float r = float(breakAt) / float(maxIter);
+        gl_FragColor = vec4(1.0 - r, 1.0 - r, 1, 1);
     }
 }
 `
