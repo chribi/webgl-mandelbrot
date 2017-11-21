@@ -151,10 +151,13 @@ class ContinousZoomControl {
         this.zoomCenter = null;
     }
 
-    startZoom(position) {
-        console.log("Start zoom");
+    startZoom(position, zoomIn) {
+        console.log("Start zoom " + (zoomIn ? "in" : "out"));
         this.setZoomCenter(position);
         var zoomPerFrame = Math.exp(Math.log(this.zoomSpeed) / this.fps);
+        if (!zoomIn) {
+            zoomPerFrame = 1 / zoomPerFrame;
+        }
         var this_ = this;
         this.timer = setInterval(function() {
             renderer.viewControl.zoomInto(this_.zoomCenter, zoomPerFrame);
@@ -187,7 +190,20 @@ $(document).ready(function() {
     main();
     $("#glcanvas").on({
         mousedown: function(event) {
-            zoomControl.startZoom([event.clientX, event.clientY]);
+            if (!zoomControl.isZooming()) {
+                var zoomIn;
+                switch (event.button) {
+                    case 0: // left button
+                        zoomIn = true;
+                        break;
+                    case 2: // right button
+                        zoomIn = false;
+                        break;
+                    default: // other button
+                        return;
+                }
+                zoomControl.startZoom([event.clientX, event.clientY], zoomIn);
+            }
         },
         mouseout: function(event) {
             zoomControl.stopZoom();
@@ -199,7 +215,10 @@ $(document).ready(function() {
         },
         mouseup: function(event) {
             zoomControl.stopZoom();
-        }
+        },
+        contextmenu: function(event) {
+            return false;
+        },
     });
 });
 
