@@ -17,25 +17,43 @@ void main(void) {
 `
 
 const fragmentSrc = `
-precision mediump float;
+precision highp float;
 
 varying vec2 c;
 
 void main(void) {
-    vec2 z = vec2(0.0, 0.0);
+    vec2 z = c;
+    // next z
     vec2 zn = vec2(0.0, 0.0);
+    // derivative of P_c^n, see
+    // https://www.math.univ-toulouse.fr/~cheritat/wiki-draw/index.php/Mandelbrot_set#Interior_detection_methods
+    vec2 deriv = vec2(1.0, 0.0);
+    // next derivative
+    vec2 derivn = vec2(0.0, 0.0);
 
-    const int maxIter = 200;
+    const int maxIter = 500;
+    const float epsilon = 1e-9;
     int breakAt = -1;
 
-    for (int iteration = 0; iteration < maxIter; iteration++) {
+    for (int iteration = 1; iteration < maxIter; iteration++) {
+        // zn = z*z + c
         zn.x = z.x * z.x - z.y * z.y + c.x;
         zn.y = 2.0 * z.x * z.y + c.y;
+
+        // derivn = 2 * deriv * z
+        derivn.x = 2.0 * (deriv.x * z.x - deriv.y * z.y);
+        derivn.y = 2.0 * (deriv.x * z.y + deriv.y * z.x);
+
         if (length(zn) > 2.0) {
             breakAt = iteration;
             break;
         }
+        if (length(derivn) < epsilon) {
+            // we are in the interior
+            break;
+        }
         z = zn;
+        deriv = derivn;
     }
     if (breakAt == -1) {
         gl_FragColor = vec4(0, 0, 0, 1.0);
