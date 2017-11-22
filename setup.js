@@ -187,7 +187,11 @@ var renderer = null;
 var zoomControl = null;
 
 $(document).ready(function() {
-    main();
+    try {
+        main();
+    } catch (error) {
+        $("#glcanvas").replaceWith(`<div id=\"error\">${error}</div>`);
+    }
     $("#glcanvas").on({
         mousedown: function(event) {
             if (!zoomControl.isZooming()) {
@@ -226,7 +230,7 @@ function main() {
     var canvas = document.getElementById("glcanvas");
     var gl = canvas.getContext("webgl");
     if (!gl) {
-        return;
+        throw "WebGL not supported";
     }
     renderer = new MandelbrotRenderer(gl);
     zoomControl = new ContinousZoomControl(renderer);
@@ -255,7 +259,8 @@ function compileShader(gl, type, source) {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        return null;
+        let msg = gl.getShaderInfoLog(shader);
+        throw msg;
     } else {
         return shader;
     }
