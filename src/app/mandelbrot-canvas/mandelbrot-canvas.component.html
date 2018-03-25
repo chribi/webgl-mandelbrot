@@ -1,1 +1,8 @@
-<canvas id="glcanvas" width="800" height="600"></canvas>
+<canvas id="glcanvas"
+    width="800" height="600"
+    (mousedown)="zoomIn($event);"
+    (mousemove)="moveZoomCenter($event);"
+    (mouseout)="stopZoom();"
+    (mouseup)="stopZoom();"
+    (contextmenu)="false;"
+    ></canvas>
