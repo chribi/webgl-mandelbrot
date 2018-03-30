@@ -1,6 +1,7 @@
 import { ViewControl } from './view-control';
+import { ShaderSource } from './shader-source';
 
-const vertexSrc = `
+const vertexSrc = new ShaderSource(`
 attribute vec2 aScreenPosition;
 
 // matrix specifying the part of the
@@ -16,9 +17,9 @@ void main(void) {
     vec3 ch = uViewMatrix * vec3(aScreenPosition, 1);
     c = ch.xy / ch.z;
 }
-`;
+`);
 
-const fragmentSrc = `
+const fragmentSrc = new ShaderSource(`
 precision highp float;
 
 varying vec2 c;
@@ -64,17 +65,17 @@ void main(void) {
         gl_FragColor = vec4(1.0 - r, 1.0 - r, 1, 1);
     }
 }
-`;
+`);
 
 export class MandelbrotRenderer {
     private gl: WebGLRenderingContext;
-    private glProgram: any;
+    private glProgram: WebGLProgram;
     private canvasWidth: number;
     private canvasHeight: number;
     viewControl: ViewControl;
     private viewMatrixLoc: WebGLUniformLocation;
 
-    constructor(glContext) {
+    constructor(glContext: WebGLRenderingContext) {
         this.gl = glContext;
         this.glProgram = this.compile(this.gl, vertexSrc, fragmentSrc);
         this.canvasWidth = glContext.canvas.width;
@@ -117,7 +118,7 @@ export class MandelbrotRenderer {
         this.render();
     }
 
-    compile(gl, vertexSource, fragmentSource) {
+    compile(gl: WebGLRenderingContext, vertexSource: ShaderSource, fragmentSource: ShaderSource): WebGLProgram {
         const vertexShader = this.compileShader(gl, gl.VERTEX_SHADER, vertexSource);
         const fragmentShader = this.compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
 
@@ -132,9 +133,9 @@ export class MandelbrotRenderer {
             return program;
         }
     }
-    compileShader(gl, type, source) {
+    compileShader(gl: WebGLRenderingContext, type: number, source: ShaderSource): WebGLShader {
         const shader = gl.createShader(type);
-        gl.shaderSource(shader, source);
+        gl.shaderSource(shader, source.source);
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
