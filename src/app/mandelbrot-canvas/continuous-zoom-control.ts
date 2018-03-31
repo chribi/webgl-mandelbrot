@@ -1,11 +1,12 @@
 import { MandelbrotRenderer } from './mandelbrot-renderer';
+import { Point2d } from '../webgl/point2d';
 
 export class ContinuousZoomControl {
     private renderer: MandelbrotRenderer;
     private zoomSpeed: number;
     private fps: number;
     private timer: any;
-    private zoomCenter: any;
+    private zoomCenter: Point2d;
 
     constructor(renderer) {
         this.renderer = renderer;
@@ -15,7 +16,7 @@ export class ContinuousZoomControl {
         this.zoomCenter = null;
     }
 
-    startZoom(position, zoomIn) {
+    startZoom(position: Point2d, zoomIn: boolean): void {
         console.log('Start zoom ' + (zoomIn ? 'in' : 'out'));
         this.setZoomCenter(position);
         let zoomPerFrame = Math.exp(Math.log(this.zoomSpeed) / this.fps);
@@ -30,7 +31,7 @@ export class ContinuousZoomControl {
         }, 1000 / this.fps);
     }
 
-    setZoomCenter(position) {
+    setZoomCenter(position: Point2d): void {
         console.log(position);
         this.zoomCenter = position;
     }

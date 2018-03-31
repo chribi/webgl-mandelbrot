@@ -1,40 +1,42 @@
+import { Point2d } from '../webgl/point2d';
+
 export class ViewControl {
     private canvasWidth: number;
     private canvasHeight: number;
     private aspectRatio: number;
-    center: number[];
+    center: Point2d;
     zoom: number;
 
     constructor(width, height) {
         this.canvasWidth = width;
         this.canvasHeight = height;
         this.aspectRatio = width / height;
-        this.center = [0, 0];
+        this.center = new Point2d(0, 0);
         this.zoom = 1;
     }
 
-    zoomInto(canvasPoint, zoomFactor) {
-        const [x, y] = this.canvasToComplex(canvasPoint);
-        const [cx, cy] = this.center;
+    zoomInto(canvasPoint: Point2d, zoomFactor: number): void {
+        const { x, y } = this.canvasToComplex(canvasPoint);
+        const { x: cx, y: cy } = this.center;
         this.zoom = this.zoom * zoomFactor;
-        this.center = [
+        this.center = new Point2d(
             x + (cx - x) / zoomFactor,
             y + (cy - y) / zoomFactor
-        ];
+        );
     }
 
     // convert canvas coordinates to complex coordinates
-    canvasToComplex(canvasPoint) {
-        const [dx, dy] = this.canvasToDevice(canvasPoint);
+    canvasToComplex(canvasPoint: Point2d): Point2d {
+        const {x: dx, y: dy} = this.canvasToDevice(canvasPoint);
         const [fx, fy] = this.getScaling();
-        return [dx * fx + this.center[0], dy * fy + this.center[1]];
+        return new Point2d(dx * fx + this.center.x, dy * fy + this.center.y);
     }
 
     // convert canvas coordinates to device coordinates
-    canvasToDevice(canvasPoint) {
-        const [cx, cy] = canvasPoint;
+    canvasToDevice(canvasPoint: Point2d): Point2d {
+        const {x: cx, y: cy} = canvasPoint;
         const [ex, ey] = [ this.canvasWidth / 2, this.canvasHeight / 2 ];
-        return [ (cx - ex) / ex, (ey - cy) / ey ];
+        return new Point2d((cx - ex) / ex, (ey - cy) / ey);
     }
 
     getScaling() {
@@ -46,7 +48,7 @@ export class ViewControl {
     // complex coordinates.  The matrix is in column-major order.
     getViewMatrix() {
         const [fx, fy] = this.getScaling();
-        const [cx, cy] = this.center;
+        const { x: cx, y: cy } = this.center;
         return [
             fx, 0, 0,
             0, fy, 0,

@@ -2,6 +2,7 @@ import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { MandelbrotRenderer } from './mandelbrot-renderer';
 import { ViewControl } from './view-control';
 import { ContinuousZoomControl } from './continuous-zoom-control';
+import { Point2d } from '../webgl/point2d';
 
 @Component({
   selector: 'app-mandelbrot-canvas',
@@ -13,12 +14,13 @@ export class MandelbrotCanvasComponent implements OnInit, OnChanges {
 
   private renderer: MandelbrotRenderer;
   private zoomControl: ContinuousZoomControl;
+  private canvas: HTMLCanvasElement;
   constructor() { }
 
   ngOnInit() {
     try {
-      const canvas = <HTMLCanvasElement> document.getElementById('glcanvas');
-      const gl = canvas.getContext('webgl');
+      this.canvas = <HTMLCanvasElement> document.getElementById('glcanvas');
+      const gl = this.canvas.getContext('webgl');
       if (!gl) {
           throw new Error('WebGL not supported');
       }
@@ -50,17 +52,23 @@ export class MandelbrotCanvasComponent implements OnInit, OnChanges {
         default: // other button
           return;
       }
-      this.zoomControl.startZoom([event.clientX, event.clientY], zoomIn);
+      this.zoomControl.startZoom(this.getCanvasCoordinates(event), zoomIn);
     }
   }
 
-  moveZoomCenter(event: MouseEvent) {
+  moveZoomCenter(event: MouseEvent): void {
     if (this.zoomControl.isZooming()) {
-      this.zoomControl.setZoomCenter([event.clientX, event.clientY]);
+      this.zoomControl.setZoomCenter(this.getCanvasCoordinates(event));
     }
   }
 
   stopZoom(): void {
     this.zoomControl.stopZoom();
+  }
+
+  private getCanvasCoordinates(event: MouseEvent): Point2d {
+    // https://stackoverflow.com/a/18053642
+    const rect = this.canvas.getBoundingClientRect();
+    return new Point2d(event.clientX - rect.left, event.clientY - rect.top);
   }
 }
