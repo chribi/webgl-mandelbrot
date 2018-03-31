@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { MandelbrotRenderer } from './mandelbrot-renderer';
 import { ViewControl } from './view-control';
 import { ContinuousZoomControl } from './continuous-zoom-control';
@@ -8,7 +8,8 @@ import { ContinuousZoomControl } from './continuous-zoom-control';
   templateUrl: './mandelbrot-canvas.component.html',
   styleUrls: ['./mandelbrot-canvas.component.css']
 })
-export class MandelbrotCanvasComponent implements OnInit {
+export class MandelbrotCanvasComponent implements OnInit, OnChanges {
+  @Input() maxIterations: number;
 
   private renderer: MandelbrotRenderer;
   private zoomControl: ContinuousZoomControl;
@@ -23,9 +24,16 @@ export class MandelbrotCanvasComponent implements OnInit {
       }
       this.renderer = new MandelbrotRenderer(gl);
       this.zoomControl = new ContinuousZoomControl(this.renderer);
-      this.renderer.render();
+      this.ngOnChanges();
     } catch (error) {
       console.log(error); // TODO show error in UI
+    }
+  }
+
+  ngOnChanges() {
+    if (this.renderer !== undefined) {
+      this.renderer.initGlProgram(this.maxIterations);
+      this.renderer.render();
     }
   }
 

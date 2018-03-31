@@ -4,5 +4,6 @@
     WebGL Mandelbrot
   </h1>
 </div>
-<app-mandelbrot-canvas></app-mandelbrot-canvas>
+<app-mandelbrot-canvas [maxIterations]="settings.maxIterations"></app-mandelbrot-canvas>
+<app-render-settings #settings></app-render-settings>
 

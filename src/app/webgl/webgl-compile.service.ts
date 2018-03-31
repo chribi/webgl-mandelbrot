@@ -16,6 +16,12 @@ export class WebglCompileService {
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
 
+    // free ressources
+    gl.detachShader(program, vertexShader);
+    gl.detachShader(program, fragmentShader);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       const msg = gl.getProgramInfoLog(program);
       throw new Error(msg);

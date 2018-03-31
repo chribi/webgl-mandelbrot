@@ -1,18 +1,22 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 
 import { AppComponent } from './app.component';
 import { MandelbrotCanvasComponent } from './mandelbrot-canvas/mandelbrot-canvas.component';
+import { RenderSettingsComponent } from './render-settings/render-settings.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    MandelbrotCanvasComponent
+    MandelbrotCanvasComponent,
+    RenderSettingsComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
