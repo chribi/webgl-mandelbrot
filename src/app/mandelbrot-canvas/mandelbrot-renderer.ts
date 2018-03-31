@@ -1,5 +1,6 @@
 import { ViewControl } from './view-control';
-import { ShaderSource } from './shader-source';
+import { ShaderSource } from '../webgl/shader-source';
+import { WebglCompileService } from '../webgl/webgl-compile.service';
 
 const vertexSrc = new ShaderSource(`
 attribute vec2 aScreenPosition;
@@ -77,7 +78,7 @@ export class MandelbrotRenderer {
 
     constructor(glContext: WebGLRenderingContext) {
         this.gl = glContext;
-        this.glProgram = this.compile(this.gl, vertexSrc, fragmentSrc);
+        this.glProgram = new WebglCompileService().compileProgram(this.gl, vertexSrc, fragmentSrc);
         this.canvasWidth = glContext.canvas.width;
         this.canvasHeight = glContext.canvas.height;
         this.viewMatrixLoc = this.gl.getUniformLocation(this.glProgram, 'uViewMatrix');
@@ -116,33 +117,5 @@ export class MandelbrotRenderer {
         this.viewControl.center = center;
         this.viewControl.zoom = zoom;
         this.render();
-    }
-
-    compile(gl: WebGLRenderingContext, vertexSource: ShaderSource, fragmentSource: ShaderSource): WebGLProgram {
-        const vertexShader = this.compileShader(gl, gl.VERTEX_SHADER, vertexSource);
-        const fragmentShader = this.compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-
-        const program = gl.createProgram();
-
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-        gl.linkProgram(program);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            return null;
-        } else {
-            return program;
-        }
-    }
-    compileShader(gl: WebGLRenderingContext, type: number, source: ShaderSource): WebGLShader {
-        const shader = gl.createShader(type);
-        gl.shaderSource(shader, source.source);
-        gl.compileShader(shader);
-
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const msg = gl.getShaderInfoLog(shader);
-            throw new Error(msg);
-        } else {
-            return shader;
-        }
     }
 }
