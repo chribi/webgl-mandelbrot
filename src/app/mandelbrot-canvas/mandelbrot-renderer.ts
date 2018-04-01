@@ -42,9 +42,11 @@ export class MandelbrotRenderer {
 
         this.glProgram = new WebglCompileService().compileProgram(this.gl, this.vertexShaderSource,
             this.fragmentShaderSource(maxIterations, continuousColoring));
-        this.viewMatrixLoc = this.gl.getUniformLocation(this.glProgram, 'uViewMatrix');
 
-        const posAttrib = this.gl.getAttribLocation(this.glProgram, 'aScreenPosition');
+        this.viewMatrixLoc = this.gl.getUniformLocation(this.glProgram, 'uViewMatrix');
+        const posAttribLoc = this.gl.getAttribLocation(this.glProgram, 'aScreenPosition');
+        const textureLoc = this.gl.getUniformLocation(this.glProgram, 'texture');
+
         const posBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, posBuffer);
         // position data defining a rectangle filling the whole canvas
@@ -56,13 +58,16 @@ export class MandelbrotRenderer {
         ];
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(posData), this.gl.STATIC_DRAW);
 
+        this.createAndLoadTexture();
+
         this.gl.viewport(0, 0, this.canvasWidth, this.canvasHeight);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.gl.useProgram(this.glProgram);
 
-        this.gl.enableVertexAttribArray(posAttrib);
+        this.gl.enableVertexAttribArray(posAttribLoc);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, posBuffer);
-        this.gl.vertexAttribPointer(posAttrib, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.vertexAttribPointer(posAttribLoc, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.uniform1i(textureLoc, 0);
     }
 
     render() {
@@ -71,12 +76,36 @@ export class MandelbrotRenderer {
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
 
+    private createAndLoadTexture(): void {
+        const texture = this.gl.createTexture();
+        const textureData = this.generateTextureData();
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB,
+            16, 1, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, textureData);
+        this.gl.generateMipmap(this.gl.TEXTURE_2D);
+    }
+
+    private generateTextureData(): Uint8Array {
+        const data = Array(16 * 1 * 3);
+        for (let row = 0; row < 16; row++) {
+            data[row * 3 + 0] = 255 - 16 * row; // red
+            data[row * 3 + 1] = 255 - 16 * row;     // green
+            data[row * 3 + 2] = 255; // blue
+        }
+        return new Uint8Array(data);
+    }
+
     private fragmentShaderSource(maxIterations: number, continuousColoring: boolean): ShaderSource {
         const escapeRadius = continuousColoring ? 256 : 2;
         return new ShaderSource(`
             precision highp float;
 
             varying vec2 c;
+            uniform sampler2D texture;
+
+            const float colorSchemeIndex = 0.5;
+
             const int maxIter = ${maxIterations};
             const float maxIterInverse = 1.0 / float(maxIter);
             const float escapeRadius = float(${escapeRadius});
@@ -86,7 +115,7 @@ export class MandelbrotRenderer {
                     return vec4(0, 0, 0, 1.0);
                 } else {
                     float r = float(iterations) * maxIterInverse;
-                    return vec4(1.0 - r, 1.0 - r, 1, 1);
+                    return texture2D(texture, vec2(r, colorSchemeIndex));
                 }
             }
 
@@ -97,7 +126,7 @@ export class MandelbrotRenderer {
                     float nu = log2(log2(length(z)));
                     float contIterations = float(iterations) + 1.0 - nu;
                     float r = contIterations * maxIterInverse;
-                    return vec4(1.0 - r, 1.0 - r, 1, 1);
+                    return texture2D(texture, vec2(r, colorSchemeIndex));
                 }
             }
 
