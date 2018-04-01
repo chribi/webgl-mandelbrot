@@ -11,6 +11,7 @@ import { Point2d } from '../webgl/point2d';
 })
 export class MandelbrotCanvasComponent implements OnInit, OnChanges {
   @Input() maxIterations: number;
+  @Input() continuousColoring: boolean;
 
   private renderer: MandelbrotRenderer;
   private zoomControl: ContinuousZoomControl;
@@ -34,7 +35,7 @@ export class MandelbrotCanvasComponent implements OnInit, OnChanges {
 
   ngOnChanges() {
     if (this.renderer !== undefined) {
-      this.renderer.initGlProgram(this.maxIterations);
+      this.renderer.initGlProgram(this.maxIterations, this.continuousColoring);
       this.renderer.render();
     }
   }

@@ -8,6 +8,7 @@ import { Component, OnInit } from '@angular/core';
 export class RenderSettingsComponent implements OnInit {
 
   maxIterations = 250;
+  continuousColoring = true;
   constructor() { }
 
   ngOnInit() {
