@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RenderSettingsComponent } from './render-settings.component';
+import { FormsModule } from '@angular/forms';
 
 describe('RenderSettingsComponent', () => {
   let component: RenderSettingsComponent;
@@ -8,7 +9,8 @@ describe('RenderSettingsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RenderSettingsComponent ]
+      declarations: [ RenderSettingsComponent ],
+      imports: [ FormsModule ]
     })
     .compileComponents();
   }));
