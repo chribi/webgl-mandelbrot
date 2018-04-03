@@ -1,14 +1,15 @@
 import { ViewControl } from './view-control';
 import { ShaderSource } from '../webgl/shader-source';
 import { WebglCompileService } from '../webgl/webgl-compile.service';
+import { ColorSchemeService } from '../color-schemes/color-scheme.service';
 
 export class MandelbrotRenderer {
-    private gl: WebGLRenderingContext;
     private glProgram: WebGLProgram;
     private canvasWidth: number;
     private canvasHeight: number;
     viewControl: ViewControl;
     private viewMatrixLoc: WebGLUniformLocation;
+    private colorSchemeIndexLoc: WebGLUniformLocation;
 
     private readonly vertexShaderSource = new ShaderSource(`
         attribute vec2 aScreenPosition;
@@ -28,22 +29,27 @@ export class MandelbrotRenderer {
         }
     `);
 
-    constructor(glContext: WebGLRenderingContext) {
-        this.gl = glContext;
-        this.canvasWidth = glContext.canvas.width;
-        this.canvasHeight = glContext.canvas.height;
+    constructor(
+        private gl: WebGLRenderingContext,
+        private compileService: WebglCompileService,
+        private colorSchemeService: ColorSchemeService
+    ) {
+        this.canvasWidth = gl.canvas.width;
+        this.canvasHeight = gl.canvas.height;
         this.viewControl = new ViewControl(this.canvasWidth, this.canvasHeight);
     }
 
-    initGlProgram(maxIterations: number, continuousColoring: boolean): void {
+    initGlProgram(maxIterations: number, continuousColoring: boolean, colorSchemeIndex: number): void {
         if (this.glProgram !== undefined) {
             this.gl.deleteProgram(this.glProgram);
         }
+        const startTime = Date.now();
 
-        this.glProgram = new WebglCompileService().compileProgram(this.gl, this.vertexShaderSource,
+        this.glProgram = this.compileService.compileProgram(this.gl, this.vertexShaderSource,
             this.fragmentShaderSource(maxIterations, continuousColoring));
 
         this.viewMatrixLoc = this.gl.getUniformLocation(this.glProgram, 'uViewMatrix');
+        this.colorSchemeIndexLoc = this.gl.getUniformLocation(this.glProgram, 'colorSchemeIndex');
         const posAttribLoc = this.gl.getAttribLocation(this.glProgram, 'aScreenPosition');
         const textureLoc = this.gl.getUniformLocation(this.glProgram, 'texture');
 
@@ -68,6 +74,14 @@ export class MandelbrotRenderer {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, posBuffer);
         this.gl.vertexAttribPointer(posAttribLoc, 2, this.gl.FLOAT, false, 0, 0);
         this.gl.uniform1i(textureLoc, 0);
+        this.setColorSchemeIndex(colorSchemeIndex);
+
+        const stopTime = Date.now();
+        console.log('Reinitializing GLProgram: ' + (stopTime - startTime) + ' ms');
+    }
+
+    setColorSchemeIndex(index: number) {
+        this.gl.uniform1f(this.colorSchemeIndexLoc, index);
     }
 
     render() {
@@ -78,22 +92,14 @@ export class MandelbrotRenderer {
 
     private createAndLoadTexture(): void {
         const texture = this.gl.createTexture();
-        const textureData = this.generateTextureData();
+        const textureData = this.colorSchemeService.textureData;
         this.gl.activeTexture(this.gl.TEXTURE0);
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB,
-            16, 1, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, textureData);
-        this.gl.generateMipmap(this.gl.TEXTURE_2D);
-    }
-
-    private generateTextureData(): Uint8Array {
-        const data = Array(16 * 1 * 3);
-        for (let row = 0; row < 16; row++) {
-            data[row * 3 + 0] = 255 - 16 * row; // red
-            data[row * 3 + 1] = 255 - 16 * row;     // green
-            data[row * 3 + 2] = 255; // blue
-        }
-        return new Uint8Array(data);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA,
+            this.colorSchemeService.textureWidth, this.colorSchemeService.textureHeight, 0,
+            this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureData);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT);
     }
 
     private fragmentShaderSource(maxIterations: number, continuousColoring: boolean): ShaderSource {
@@ -104,17 +110,16 @@ export class MandelbrotRenderer {
             varying vec2 c;
             uniform sampler2D texture;
 
-            const float colorSchemeIndex = 0.5;
+            uniform float colorSchemeIndex;
 
             const int maxIter = ${maxIterations};
-            const float maxIterInverse = 1.0 / float(maxIter);
             const float escapeRadius = float(${escapeRadius});
 
             vec4 pixelColor(int iterations) {
                 if (iterations == -1) {
                     return vec4(0, 0, 0, 1.0);
                 } else {
-                    float r = float(iterations) * maxIterInverse;
+                    float r = float(iterations) / 64.0;
                     return texture2D(texture, vec2(r, colorSchemeIndex));
                 }
             }
@@ -125,7 +130,7 @@ export class MandelbrotRenderer {
                 } else {
                     float nu = log2(log2(length(z)));
                     float contIterations = float(iterations) + 1.0 - nu;
-                    float r = contIterations * maxIterInverse;
+                    float r = contIterations / 64.0;
                     return texture2D(texture, vec2(r, colorSchemeIndex));
                 }
             }

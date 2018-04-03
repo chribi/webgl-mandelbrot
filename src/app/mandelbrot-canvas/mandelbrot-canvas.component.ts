@@ -1,8 +1,10 @@
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, SimpleChange } from '@angular/core';
 import { MandelbrotRenderer } from './mandelbrot-renderer';
 import { ViewControl } from './view-control';
 import { ContinuousZoomControl } from './continuous-zoom-control';
 import { Point2d } from '../webgl/point2d';
+import { ColorSchemeService } from '../color-schemes/color-scheme.service';
+import { WebglCompileService } from '../webgl/webgl-compile.service';
 
 @Component({
   selector: 'app-mandelbrot-canvas',
@@ -12,11 +14,15 @@ import { Point2d } from '../webgl/point2d';
 export class MandelbrotCanvasComponent implements OnInit, OnChanges {
   @Input() maxIterations: number;
   @Input() continuousColoring: boolean;
+  @Input() colorSchemeIndex: number;
 
   private renderer: MandelbrotRenderer;
   private zoomControl: ContinuousZoomControl;
   private canvas: HTMLCanvasElement;
-  constructor() { }
+  constructor(
+    private colorSchemeService: ColorSchemeService,
+    private compileService: WebglCompileService
+  ) { }
 
   ngOnInit() {
     try {
@@ -25,19 +31,30 @@ export class MandelbrotCanvasComponent implements OnInit, OnChanges {
       if (!gl) {
           throw new Error('WebGL not supported');
       }
-      this.renderer = new MandelbrotRenderer(gl);
+      this.renderer = new MandelbrotRenderer(gl, this.compileService, this.colorSchemeService);
       this.zoomControl = new ContinuousZoomControl(this.renderer);
-      this.ngOnChanges();
+      this.renderer.initGlProgram(this.maxIterations, this.continuousColoring, this.colorSchemeIndex);
+      this.renderer.render();
     } catch (error) {
       console.log(error); // TODO show error in UI
     }
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: { [prop: string]: SimpleChange }) {
     if (this.renderer !== undefined) {
-      this.renderer.initGlProgram(this.maxIterations, this.continuousColoring);
+      const needToRecompile = this.changed('maxIterations', changes) || this.changed('continuousColoring', changes);
+      if (needToRecompile) {
+        this.renderer.initGlProgram(this.maxIterations, this.continuousColoring, this.colorSchemeIndex);
+      } else {
+        this.renderer.setColorSchemeIndex(this.colorSchemeIndex);
+      }
       this.renderer.render();
     }
+  }
+
+  // helper method to detect if some property has changed
+  private changed(prop: string, changes: { [prop: string]: SimpleChange }): boolean {
+    return changes[prop] && changes[prop].previousValue !== changes[prop].currentValue;
   }
 
   zoomIn(event: MouseEvent): void {

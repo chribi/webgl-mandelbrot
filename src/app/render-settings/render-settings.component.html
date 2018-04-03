@@ -10,4 +10,12 @@
     </select>
   </span>
   <span><input type="checkbox" [(ngModel)]="continuousColoring">Continuous coloring</span>
+  <span>Color scheme:
+    <select [(ngModel)]="selectedColorSchemeIndex">
+      <option *ngFor="let scheme of colorSchemes"
+        [value]="scheme.index">
+        {{scheme.label}}
+      </option>
+    </select>
+  </span>
 </div>

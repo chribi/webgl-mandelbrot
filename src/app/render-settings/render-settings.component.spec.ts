@@ -2,6 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RenderSettingsComponent } from './render-settings.component';
 import { FormsModule } from '@angular/forms';
+import { ColorSchemeService } from '../color-schemes/color-scheme.service';
 
 describe('RenderSettingsComponent', () => {
   let component: RenderSettingsComponent;
@@ -10,6 +11,7 @@ describe('RenderSettingsComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ RenderSettingsComponent ],
+      providers: [ ColorSchemeService ],
       imports: [ FormsModule ]
     })
     .compileComponents();

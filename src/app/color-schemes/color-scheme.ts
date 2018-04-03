@@ -28,8 +28,6 @@ export class ColorScheme {
             });
         }
 
-        console.log(label, 'secantSlopes', secantSlopes);
-
         // tangent slopes in each point
         const slopes = Array(count);
         slopes[0] = secantSlopes[0];
@@ -41,7 +39,6 @@ export class ColorScheme {
                 slopes[k][component] = (secantSlopes[k - 1][component] + secantSlopes[k][component]) / 2;
             });
         }
-        console.log(label, 'slopes', slopes);
 
         // interpolating cubic for each component (RGB)
         const cubics = { };

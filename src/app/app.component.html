@@ -4,6 +4,9 @@
     WebGL Mandelbrot
   </h1>
 </div>
-<app-mandelbrot-canvas [maxIterations]="settings.maxIterations" [continuousColoring]="settings.continuousColoring"></app-mandelbrot-canvas>
+<app-mandelbrot-canvas
+  [maxIterations]="settings.maxIterations"
+  [continuousColoring]="settings.continuousColoring"
+  [colorSchemeIndex]="settings.selectedColorSchemeIndex"></app-mandelbrot-canvas>
 <app-render-settings #settings></app-render-settings>
 
