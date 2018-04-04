@@ -1,5 +1,7 @@
 # WebglMandelbrot
 
+Code for https://chribi.github.io/webgl-mandelbrot/ that renders the [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.7.3.
 
 ## Development server
