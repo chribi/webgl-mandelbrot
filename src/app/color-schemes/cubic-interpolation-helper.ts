@@ -23,7 +23,7 @@ export function piecewiseCubic(points: {x: number, y: number, m: number}[]): ((x
     for (let k = 0; k < cubics.length; k++) {
         const left = points[k];
         const right = points[k + 1];
-        cubics[k] = this.intervalCubic(left.x, left.y, left.m, right.x, right.y, right.m);
+        cubics[k] = intervalCubic(left.x, left.y, left.m, right.x, right.y, right.m);
     }
     const xMin = points[0].x;
     const xMax = points[points.length - 1].x;
